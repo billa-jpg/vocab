@@ -19,8 +19,34 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
   body { background: var(--bg); color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
-  .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+  .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 12px; }
   
+  .level-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .level-nav::-webkit-scrollbar { display: none; }
+  .btn-level {
+    padding: 8px 14px;
+    background: #1e1e26;
+    border: 1px solid #30303e;
+    color: var(--text-secondary);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-level.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
   .header { display: flex; justify-content: space-between; align-items: center; }
   .timer-bar { width: 100%; height: 6px; background: #2a2a35; border-radius: 3px; overflow: hidden; }
   .timer-fill { height: 100%; width: 100%; background: var(--accent); transition: width 1s linear; }
@@ -38,8 +64,11 @@
   }
   .word-head { font-size: 2.2rem; font-weight: 700; color: #fff; display: flex; align-items: baseline; gap: 10px; }
   .pos-tag { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
-  .timer-text { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
   
+  .meta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .timer-text { font-size: 0.85rem; color: var(--text-secondary); }
+  .memory-status { font-size: 0.8rem; color: #7f8c8d; background: #22222d; padding: 2px 8px; border-radius: 6px; border: 1px solid #2d2d3a; }
+
   .content-area { margin: 18px 0; flex-grow: 1; }
   .def-box { margin-bottom: 14px; }
   .def-en { font-size: 1rem; color: #e2e2ec; margin-bottom: 6px; line-height: 1.4; }
@@ -53,8 +82,8 @@
   .unmasked { filter: none !important; cursor: default; }
 
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  button { border: none; padding: 15px; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
-  button:active { transform: scale(0.98); opacity: 0.85; }
+  button.action-btn { border: none; padding: 15px; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+  button.action-btn:active { transform: scale(0.98); opacity: 0.85; }
   .btn-reveal { width: 100%; background: #2f2f3c; color: #fff; border: 1px solid #3f3f50; }
   .btn-fail { background: rgba(255, 92, 92, 0.15); color: var(--danger); border: 1px solid var(--danger); }
   .btn-pass { background: rgba(61, 220, 132, 0.15); color: var(--success); border: 1px solid var(--success); }
@@ -63,9 +92,18 @@
 <body>
 
 <div class="container">
+  <div class="level-nav">
+    <button class="btn-level active" onclick="switchLevel('1-2')">Lv 1-2</button>
+    <button class="btn-level" onclick="switchLevel('3')">Lv 3</button>
+    <button class="btn-level" onclick="switchLevel('4')">Lv 4</button>
+    <button class="btn-level" onclick="switchLevel('5')">Lv 5</button>
+    <button class="btn-level" onclick="switchLevel('6')">Lv 6</button>
+    <button class="btn-level" onclick="switchLevel('all')">綜合隨機</button>
+  </div>
+
   <div class="header">
-    <span style="font-weight: 700; letter-spacing: 0.5px;">26s 速記模式</span>
-    <span id="queueCount" style="color: var(--text-secondary); font-size: 0.9rem;">剩餘: 0</span>
+    <span style="font-weight: 700; letter-spacing: 0.5px;" id="modeTitle">Lv 1-2 速記</span>
+    <span id="queueCount" style="color: var(--text-secondary); font-size: 0.9rem;">今日待複習: 0</span>
   </div>
   
   <div class="timer-bar">
@@ -78,7 +116,10 @@
         <span id="cardWord">---</span>
         <span class="pos-tag" id="cardPos"></span>
       </div>
-      <div class="timer-text" id="timerText">倒數 26 秒</div>
+      <div class="meta-row">
+        <span class="timer-text" id="timerText">倒數 26 秒</span>
+        <span class="memory-status" id="memoryStatus">初次學習</span>
+      </div>
     </div>
 
     <div class="content-area">
@@ -92,72 +133,157 @@
     </div>
 
     <div id="controlArea" onclick="event.stopPropagation()">
-      <button class="btn-reveal" id="btnReveal" onclick="revealCard()">顯示釋義</button>
+      <button class="action-btn btn-reveal" id="btnReveal" onclick="revealCard()">顯示釋義</button>
       <div class="actions" id="evalButtons" style="display: none;">
-        <button class="btn-fail" onclick="answer(false)">不熟 (重新循環)</button>
-        <button class="btn-pass" onclick="answer(true)">記住了 (下一題)</button>
+        <button class="action-btn btn-fail" onclick="answer(false)">不熟 (重新循環)</button>
+        <button class="action-btn btn-pass" onclick="answer(true)">記住了 (進入下個間隔)</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const DEFAULT_WORDS = [
-  {
-    word: "accept",
-    pos: "v.",
-    defEn: "To agree to receive or do something.",
-    defZh: "接受；答應 (Level 1)",
-    ex1: "He accepted the gift with a smile.",
-    ex2: "The board unanimously accepted the proposal after a thorough evaluation of the financial risks."
-  },
-  {
-    word: "damage",
-    pos: "n.",
-    defEn: "Physical harm caused to something which makes it less attractive, useful, or valuable.",
-    defZh: "損害；傷害 (Level 2)",
-    ex1: "The storm caused serious damage to the roof.",
-    ex2: "Prolonged exposure to ultraviolet radiation can cause irreversible cellular damage to human skin."
-  },
-  {
-    word: "constant",
-    pos: "adj.",
-    defEn: "Happening all the time or repeatedly; remaining unchanging.",
-    defZh: "持續不斷的；恆定的 (Level 3)",
-    ex1: "He was tired of the constant noise.",
-    ex2: "Maintaining a constant velocity requires balancing the applied driving force against opposing frictional drag."
-  },
-  {
-    word: "efficient",
-    pos: "adj.",
-    defEn: "Working in a well-organized and competent way without wasting time, energy, or resources.",
-    defZh: "有效率的 (Level 4)",
-    ex1: "This new machine is very efficient.",
-    ex2: "Developing efficient numerical algorithms allows scientists to solve complex differential equations within seconds."
-  },
-  {
-    word: "substitute",
-    pos: "v.",
-    defEn: "To use something or someone instead of another.",
-    defZh: "替代；取代 (Level 5)",
-    ex1: "You can substitute honey for sugar in this recipe.",
-    ex2: "The engineer substituted lightweight composite materials for steel to enhance the vehicle's structural agility."
-  },
-  {
-    word: "accumulate",
-    pos: "v.",
-    defEn: "To gradually gather or build up an increasing number or quantity of something over time.",
-    defZh: "積累；堆積 (Level 6)",
-    ex1: "Dust accumulates quickly in this room.",
-    ex2: "Over the course of the simulation, tiny computational rounding errors accumulated and distorted the final trajectory."
-  }
-];
+// 間隔天數規則：階段 1 -> 1天, 階段 2 -> 2天, 階段 3 -> 4天, 階段 4 -> 7天, 階段 5 -> 15天, 階段 6 -> 30天
+const INTERVALS = [0, 1, 2, 4, 7, 15, 30];
 
-let deck = [...DEFAULT_WORDS];
+const DATABASE = {
+  "1-2": [
+    {
+      word: "accept",
+      pos: "v.",
+      defEn: "To agree to receive or do something.",
+      defZh: "接受；答應 (Level 1)",
+      ex1: "He accepted the gift with a smile.",
+      ex2: "The board unanimously accepted the proposal after a thorough evaluation of the financial risks."
+    },
+    {
+      word: "damage",
+      pos: "n.",
+      defEn: "Physical harm caused to something which makes it less attractive, useful, or valuable.",
+      defZh: "損害；傷害 (Level 2)",
+      ex1: "The storm caused serious damage to the roof.",
+      ex2: "Prolonged exposure to ultraviolet radiation can cause irreversible cellular damage to human skin."
+    }
+  ],
+  "3": [
+    {
+      word: "constant",
+      pos: "adj.",
+      defEn: "Happening all the time or repeatedly; remaining unchanging.",
+      defZh: "持續不斷的；恆定的 (Level 3)",
+      ex1: "He was tired of the constant noise.",
+      ex2: "Maintaining a constant velocity requires balancing the applied driving force against opposing frictional drag."
+    }
+  ],
+  "4": [
+    {
+      word: "efficient",
+      pos: "adj.",
+      defEn: "Working in a well-organized and competent way without wasting time, energy, or resources.",
+      defZh: "有效率的 (Level 4)",
+      ex1: "This new machine is very efficient.",
+      ex2: "Developing efficient numerical algorithms allows scientists to solve complex differential equations within seconds."
+    }
+  ],
+  "5": [
+    {
+      word: "substitute",
+      pos: "v.",
+      defEn: "To use something or someone instead of another.",
+      defZh: "替代；取代 (Level 5)",
+      ex1: "You can substitute honey for sugar in this recipe.",
+      ex2: "The engineer substituted lightweight composite materials for steel to enhance the vehicle's structural agility."
+    }
+  ],
+  "6": [
+    {
+      word: "accumulate",
+      pos: "v.",
+      defEn: "To gradually gather or build up an increasing number or quantity of something over time.",
+      defZh: "積累；堆積 (Level 6)",
+      ex1: "Dust accumulates quickly in this room.",
+      ex2: "Over the course of the simulation, tiny computational rounding errors accumulated and distorted the final trajectory."
+    }
+  ]
+};
+
+// 讀取進度紀錄
+function getMemoryData() {
+  return JSON.parse(localStorage.getItem('vocab_memory_data') || '{}');
+}
+
+function saveMemoryData(data) {
+  localStorage.setItem('vocab_memory_data', JSON.stringify(data));
+}
+
+let currentMode = "1-2";
+let deck = [];
 let currentIndex = 0;
 let timeLeft = 26;
 let timerId = null;
 let isRevealed = false;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function getRelativeTimeDescription(lastReviewTimestamp) {
+  if (!lastReviewTimestamp) return "初次學習";
+  const now = Date.now();
+  const diffHours = (now - lastReviewTimestamp) / (1000 * 60 * 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffHours < 1) return "剛剛複習過";
+  if (diffHours < 24) return "今天早些時候複習";
+  if (diffDays === 1) return "1 天前複習過";
+  return `${diffDays} 天前複習過`;
+}
+
+function switchLevel(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.btn-level').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('onclick').includes(`'${mode}'`)) {
+      btn.classList.add('active');
+    }
+  });
+
+  const titles = {
+    "1-2": "Lv 1-2 速記",
+    "3": "Lv 3 速記",
+    "4": "Lv 4 速記",
+    "5": "Lv 5 速記",
+    "6": "Lv 6 速記",
+    "all": "綜合隨機速記"
+  };
+  document.getElementById('modeTitle').innerText = titles[mode];
+
+  let sourceWords = [];
+  if (mode === "all") {
+    Object.values(DATABASE).forEach(list => sourceWords.push(...list));
+    sourceWords = shuffle(sourceWords);
+  } else {
+    sourceWords = [...DATABASE[mode]];
+  }
+
+  // 篩選：只排入到期該複習或未學過的單字
+  const mem = getMemoryData();
+  const now = Date.now();
+  
+  deck = sourceWords.filter(item => {
+    const record = mem[item.word];
+    if (!record) return true; // 新單字立刻練習
+    return now >= (record.nextReviewTime || 0); // 時間到了才複習
+  });
+
+  // 如果全都還沒到期，提供所有單字做自由溫習
+  if (deck.length === 0 && sourceWords.length > 0) {
+    deck = [...sourceWords];
+  }
+
+  currentIndex = 0;
+  renderCard();
+}
 
 function startTimer() {
   clearInterval(timerId);
@@ -182,10 +308,11 @@ function updateTimerUI() {
 
 function renderCard() {
   if (deck.length === 0) {
-    document.getElementById('cardWord').innerText = "全部完成！";
+    document.getElementById('cardWord').innerText = "本組完成！";
     document.getElementById('cardPos').innerText = "";
     document.getElementById('timerText').innerText = "";
-    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>太棒了！所有單字都已完成記憶提取。</p>";
+    document.getElementById('memoryStatus').innerText = "";
+    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>太棒了！今天該複習的進度都已完成，請切換其他組別或明天再來！</p>";
     document.getElementById('secretArea').className = "unmasked";
     document.getElementById('controlArea').style.display = "none";
     clearInterval(timerId);
@@ -193,8 +320,13 @@ function renderCard() {
   }
 
   isRevealed = false;
-  document.getElementById('queueCount').innerText = `剩餘: ${deck.length}`;
+  document.getElementById('queueCount').innerText = `剩餘待練: ${deck.length}`;
   const current = deck[currentIndex];
+
+  const mem = getMemoryData();
+  const record = mem[current.word];
+  const lastTime = record ? record.lastReviewTime : null;
+  document.getElementById('memoryStatus').innerText = getRelativeTimeDescription(lastTime);
 
   document.getElementById('cardWord').innerText = current.word;
   document.getElementById('cardPos').innerText = current.pos || '';
@@ -232,9 +364,30 @@ function handleCardClick() {
 }
 
 function answer(passed) {
+  const current = deck[currentIndex];
+  const mem = getMemoryData();
+  let record = mem[current.word] || { stage: 0 };
+
+  const now = Date.now();
+
   if (passed) {
+    // 答對：晉升下一階段，拉長間隔
+    record.stage = Math.min(record.stage + 1, INTERVALS.length - 1);
+    const intervalDays = INTERVALS[record.stage];
+    record.lastReviewTime = now;
+    record.nextReviewTime = now + (intervalDays * 24 * 60 * 60 * 1000);
+    mem[current.word] = record;
+    saveMemoryData(mem);
+
     deck.splice(currentIndex, 1);
   } else {
+    // 答錯：重置階段，並移到目前隊列後端今天繼續練
+    record.stage = 0;
+    record.lastReviewTime = now;
+    record.nextReviewTime = now;
+    mem[current.word] = record;
+    saveMemoryData(mem);
+
     const item = deck.splice(currentIndex, 1)[0];
     deck.push(item);
   }
@@ -252,7 +405,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-renderCard();
+switchLevel("1-2");
 </script>
 </body>
 </html>
