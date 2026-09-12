@@ -8,13 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root {
-    --bg: #0b0b0e;
-    --card: #17171e;
-    --card-border: #262633;
-    --card-active: #22222d;
+    --bg: #09090b;
+    --card: #15151c;
+    --card-border: #232330;
     --accent: #3b82f6;
-    --text-primary: #f3f3f6;
-    --text-secondary: #8e8e9c;
+    --text-primary: #f4f4f7;
+    --text-secondary: #888896;
     --danger: #ef4444;
     --danger-bg: rgba(239, 68, 68, 0.12);
     --success: #10b981;
@@ -36,18 +35,19 @@
     align-items: center; 
     min-height: 100vh; 
     padding: 16px;
-    overflow-x: hidden;
+    overflow: hidden;
   }
   .container { 
     width: 100%; 
     max-width: 440px; 
-    min-height: 85vh;
+    min-height: 90vh;
     display: flex; 
     flex-direction: column; 
     justify-content: center;
+    position: relative;
   }
 
-  /* 首頁：純按鈕選單 */
+  /* ---------------- 首頁：微色彩按鈕 ---------------- */
   #viewHome {
     display: flex;
     flex-direction: column;
@@ -62,46 +62,64 @@
   .level-card {
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 18px;
-    padding: 24px 16px;
+    border-radius: 20px;
+    padding: 26px 16px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     cursor: pointer;
-    transition: transform 0.15s, background 0.2s;
+    transition: transform 0.15s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
   }
-  .level-card:active {
-    transform: scale(0.97);
-    background: var(--card-active);
-  }
-  .level-card.special {
-    grid-column: span 2;
-    background: linear-gradient(135deg, #1a1f30 0%, #151620 100%);
-    border-color: #353c52;
-  }
-  .lvl-name { 
-    font-size: 1.25rem; 
-    font-weight: 700; 
-    color: #fff; 
-    text-align: center;
+  .level-card:active { transform: scale(0.96); }
+
+  /* 色彩微標識 */
+  .lvl-1-2 { border-top: 3px solid #10b981; }
+  .lvl-3   { border-top: 3px solid #3b82f6; }
+  .lvl-4   { border-top: 3px solid #f59e0b; }
+  .lvl-5   { border-top: 3px solid #a855f7; }
+  .lvl-6   { border-top: 3px solid #f43f5e; }
+  .lvl-all { 
+    grid-column: span 2; 
+    border-top: 3px solid #6366f1;
+    background: linear-gradient(135deg, #131522 0%, #101016 100%);
   }
 
-  /* 刷題頁面 */
+  .lvl-name { 
+    font-size: 1.3rem; 
+    font-weight: 800; 
+    color: #fff; 
+    letter-spacing: -0.3px;
+  }
+  .lvl-tag {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  /* ---------------- 刷題頁 ---------------- */
   #viewPractice {
     display: none;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     width: 100%;
+    height: 88vh;
+    max-height: 720px;
+    position: relative;
     animation: slideUp 0.2s ease-out;
   }
   .nav-bar { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
+    height: 40px;
   }
   .btn-back {
-    background: #1e1e28;
-    border: 1px solid #303040;
+    background: #191922;
+    border: 1px solid #282836;
     color: #cfcfe0;
     padding: 8px 14px;
     border-radius: 18px;
@@ -109,87 +127,129 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .btn-back:active { transform: scale(0.96); }
+  .btn-back:active { transform: scale(0.95); }
   .current-mode-tag { font-size: 1rem; font-weight: 700; color: #fff; }
-  .queue-tag { font-size: 0.85rem; color: var(--text-secondary); }
+  .queue-tag { font-size: 0.85rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+  /* 卡片容器 (支援手勢拖曳) */
+  .card-container {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    display: flex;
+    perspective: 1000px;
+  }
 
   .card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 22px;
+    border-radius: 24px;
     padding: 24px 20px;
-    min-height: 400px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+    touch-action: none;
+    will-change: transform, opacity;
+    transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.18s;
+  }
+
+  /* 滑動時的覆蓋光暈標識 */
+  .swipe-badge {
+    position: absolute;
+    top: 24px;
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s ease;
+  }
+  .badge-pass {
+    right: 20px;
+    color: var(--success);
+    border: 2px solid var(--success);
+    transform: rotate(8deg);
+  }
+  .badge-fail {
+    left: 20px;
+    color: var(--danger);
+    border: 2px solid var(--danger);
+    transform: rotate(-8deg);
   }
   
   .card-top { display: flex; flex-direction: column; gap: 8px; }
   .word-row { display: flex; align-items: center; justify-content: space-between; }
   .word-group { display: flex; align-items: baseline; gap: 10px; }
-  .word-head { font-size: 2.3rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+  .word-head { font-size: 2.35rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
   .pos-tag { font-size: 1.1rem; color: var(--accent); font-weight: 700; }
   
   .audio-btn {
-    background: #242432;
-    border: 1px solid #333345;
-    color: #dcdce6;
-    width: 38px;
-    height: 38px;
+    background: #22222e;
+    border: 1px solid #303042;
+    color: #e0e0ec;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
   .audio-btn:active { background: var(--accent); color: #fff; }
 
   .memory-status-wrap { display: flex; justify-content: flex-start; }
   .memory-status { 
     font-size: 0.78rem; 
-    color: #9da3af; 
-    background: #121218; 
+    color: #9292a4; 
+    background: #111116; 
     padding: 3px 9px; 
     border-radius: 8px; 
-    border: 1px solid #232330; 
+    border: 1px solid #20202c; 
   }
 
-  .content-area { margin: 20px 0; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-  .mask { filter: blur(9px); transition: filter 0.25s ease-out; cursor: pointer; }
+  /* 釋義區域與高亮目標詞 */
+  .content-area { margin: 16px 0; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+  .mask { filter: blur(10px); transition: filter 0.22s ease-out; cursor: pointer; }
   .unmasked { filter: none !important; cursor: default; }
 
-  .def-box { margin-bottom: 16px; }
+  .def-box { margin-bottom: 14px; }
   .def-en { font-size: 1.02rem; color: #ededf2; margin-bottom: 6px; line-height: 1.45; }
   .def-zh { font-size: 1rem; color: var(--accent); font-weight: 600; }
   
   .sentence-list { 
     display: flex; 
     flex-direction: column; 
-    gap: 12px; 
-    border-top: 1px solid #242432; 
-    padding-top: 14px; 
+    gap: 10px; 
+    border-top: 1px solid #232330; 
+    padding-top: 12px; 
   }
-  .sentence-item { font-size: 0.92rem; line-height: 1.48; color: #b5b5c4; }
+  .sentence-item { font-size: 0.92rem; line-height: 1.45; color: #b0b0c2; }
   .sentence-item b { color: #ffffff; margin-right: 4px; }
+  .hl-word { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   
-  .control-wrapper { width: 100%; }
+  /* 底部點擊按鈕 (輔助盲按) */
+  .control-wrapper { width: 100%; padding-top: 6px; }
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   button.action-btn { 
     border: none; 
-    padding: 16px; 
-    border-radius: 15px; 
-    font-size: 1.02rem; 
+    padding: 15px; 
+    border-radius: 16px; 
+    font-size: 1rem; 
     font-weight: 700; 
     cursor: pointer; 
-    transition: transform 0.12s; 
+    transition: transform 0.1s; 
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  button.action-btn:active { transform: scale(0.97); }
-  .btn-reveal { width: 100%; background: #272736; color: #fff; border: 1px solid #3b3b50; }
+  button.action-btn:active { transform: scale(0.96); }
+  .btn-reveal { width: 100%; background: #242432; color: #fff; border: 1px solid #36364a; }
   .btn-fail { background: var(--danger-bg); color: var(--danger); border: 1.5px solid var(--danger); }
   .btn-pass { background: var(--success-bg); color: var(--success); border: 1.5px solid var(--success); }
 
@@ -200,31 +260,37 @@
 <body>
 
 <div class="container">
-  <!-- 首頁：純六個按鈕 -->
+  <!-- 首頁：微色彩按鈕 -->
   <div id="viewHome">
     <div class="grid-levels">
-      <div class="level-card" onclick="openPractice('1-2')">
+      <div class="level-card lvl-1-2" onclick="openPractice('1-2')">
         <div class="lvl-name">Lv 1-2</div>
+        <div class="lvl-tag">初階核心</div>
       </div>
 
-      <div class="level-card" onclick="openPractice('3')">
+      <div class="level-card lvl-3" onclick="openPractice('3')">
         <div class="lvl-name">Lv 3</div>
+        <div class="lvl-tag">中階進階</div>
       </div>
 
-      <div class="level-card" onclick="openPractice('4')">
+      <div class="level-card lvl-4" onclick="openPractice('4')">
         <div class="lvl-name">Lv 4</div>
+        <div class="lvl-tag">高頻關鍵</div>
       </div>
 
-      <div class="level-card" onclick="openPractice('5')">
+      <div class="level-card lvl-5" onclick="openPractice('5')">
         <div class="lvl-name">Lv 5</div>
+        <div class="lvl-tag">前標挑戰</div>
       </div>
 
-      <div class="level-card" onclick="openPractice('6')">
+      <div class="level-card lvl-6" onclick="openPractice('6')">
         <div class="lvl-name">Lv 6</div>
+        <div class="lvl-tag">頂標決勝</div>
       </div>
 
-      <div class="level-card special" onclick="openPractice('all')">
+      <div class="level-card lvl-all" onclick="openPractice('all')">
         <div class="lvl-name">綜合隨機</div>
+        <div class="lvl-tag">1～6 級無限全隨機抽測</div>
       </div>
     </div>
   </div>
@@ -237,41 +303,48 @@
       <span class="queue-tag" id="queueCount">剩餘: 0</span>
     </div>
 
-    <div class="card" id="card" onclick="handleCardClick()">
-      <div class="card-top">
-        <div class="word-row">
-          <div class="word-group">
-            <span class="word-head" id="cardWord">---</span>
-            <span class="pos-tag" id="cardPos"></span>
-          </div>
-          <button class="audio-btn" id="audioBtn" onclick="speakWord(event)" title="朗讀單字">🔊</button>
-        </div>
-        <div class="memory-status-wrap">
-          <span class="memory-status" id="memoryStatus">初次學習</span>
-        </div>
-      </div>
+    <!-- 卡片拖曳區 -->
+    <div class="card-container">
+      <div class="card" id="card">
+        <div class="swipe-badge badge-pass" id="badgePass">記住了 ✓</div>
+        <div class="swipe-badge badge-fail" id="badgeFail">不熟 ✕</div>
 
-      <div class="content-area">
-        <div id="secretArea" class="mask">
-          <div class="def-box">
-            <div class="def-en" id="cardDefEn">---</div>
-            <div class="def-zh" id="cardDefZh">---</div>
+        <div class="card-top">
+          <div class="word-row">
+            <div class="word-group">
+              <span class="word-head" id="cardWord">---</span>
+              <span class="pos-tag" id="cardPos"></span>
+            </div>
+            <button class="audio-btn" id="audioBtn" onclick="speakWord(event)" title="朗讀">🔊</button>
           </div>
-          <div class="sentence-list" id="sentenceList"></div>
+          <div class="memory-status-wrap">
+            <span class="memory-status" id="memoryStatus">初次學習</span>
+          </div>
         </div>
-      </div>
 
-      <div class="control-wrapper" onclick="event.stopPropagation()">
-        <button class="action-btn btn-reveal" id="btnReveal" onclick="revealCard()">顯示釋義</button>
-        <div class="actions" id="evalButtons" style="display: none;">
-          <button class="action-btn btn-fail" onclick="answer(false)">不熟 (循環)</button>
-          <button class="action-btn btn-pass" onclick="answer(true)">記住了</button>
+        <div class="content-area">
+          <div id="secretArea" class="mask">
+            <div class="def-box">
+              <div class="def-en" id="cardDefEn">---</div>
+              <div class="def-zh" id="cardDefZh">---</div>
+            </div>
+            <div class="sentence-list" id="sentenceList"></div>
+          </div>
+        </div>
+
+        <div class="control-wrapper" onclick="event.stopPropagation()">
+          <button class="action-btn btn-reveal" id="btnReveal" onclick="revealCard()">顯示釋義 (點擊或上滑)</button>
+          <div class="actions" id="evalButtons" style="display: none;">
+            <button class="action-btn btn-fail" onclick="triggerAnswer(false)">不熟 (左滑)</button>
+            <button class="action-btn btn-pass" onclick="triggerAnswer(true)">記住了 (右滑)</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- 外部單字庫 -->
 <script src="level1_2.js"></script>
 <script src="level3.js"></script>
 <script src="level4.js"></script>
@@ -303,6 +376,7 @@ let currentMode = "1-2";
 let deck = [];
 let currentIndex = 0;
 let isRevealed = false;
+let isAnimating = false;
 
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -331,25 +405,12 @@ function getRelativeTimeDescription(lastReviewTimestamp) {
   return `${diffDays} 天前複習`;
 }
 
-function getDueWordsForLevel(lvl) {
-  const db = getFullDatabase();
-  const mem = getMemoryData();
-  const now = Date.now();
-
-  let list = [];
-  if (lvl === 'all') {
-    Object.values(db).forEach(group => {
-      if (Array.isArray(group)) list.push(...group);
-    });
-  } else {
-    list = db[lvl] || [];
-  }
-
-  return list.filter(item => {
-    const record = mem[item.word];
-    if (!record) return true;
-    return now >= (record.nextReviewTime || 0);
-  });
+// 例句目標詞自動高亮
+function highlightTargetWord(sentence, targetWord) {
+  if (!sentence || !targetWord) return sentence;
+  const root = targetWord.replace(/(ing|ed|es|s)$/i, '');
+  const pattern = new RegExp(`\\b(${targetWord}|${root}[a-z]*)\\b`, 'gi');
+  return sentence.replace(pattern, '<span class="hl-word">$1</span>');
 }
 
 function openPractice(mode) {
@@ -365,17 +426,15 @@ function openPractice(mode) {
   document.getElementById('currentModeLabel').innerText = titles[mode];
 
   const db = getFullDatabase();
-  let sourceWords = getDueWordsForLevel(mode);
+  let sourceWords = [];
 
-  if (sourceWords.length === 0) {
-    if (mode === 'all') {
-      let all = [];
-      Object.values(db).forEach(group => all.push(...group));
-      sourceWords = shuffle(all);
-    } else {
-      sourceWords = [...(db[mode] || [])];
-    }
-  } else if (mode === 'all') {
+  if (mode === 'all') {
+    Object.values(db).forEach(group => {
+      if (Array.isArray(group)) sourceWords.push(...group);
+    });
+    sourceWords = shuffle(sourceWords);
+  } else {
+    sourceWords = [...(db[mode] || [])];
     sourceWords = shuffle(sourceWords);
   }
 
@@ -394,11 +453,18 @@ function goHome() {
 }
 
 function renderCard() {
+  const cardEl = document.getElementById('card');
+  cardEl.style.transition = 'none';
+  cardEl.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+  cardEl.style.opacity = '1';
+  document.getElementById('badgePass').style.opacity = '0';
+  document.getElementById('badgeFail').style.opacity = '0';
+
   if (deck.length === 0) {
     document.getElementById('cardWord').innerText = "本組完成！";
     document.getElementById('cardPos').innerText = "";
     document.getElementById('memoryStatus').innerText = "進度達成";
-    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>所有單字皆已掌握完畢。</p>";
+    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>所有單字皆已掌握完畢！</p>";
     document.getElementById('secretArea').className = "unmasked";
     document.getElementById('btnReveal').style.display = "none";
     document.getElementById('evalButtons').style.display = "none";
@@ -406,6 +472,7 @@ function renderCard() {
   }
 
   isRevealed = false;
+  isAnimating = false;
   document.getElementById('queueCount').innerText = `剩餘: ${deck.length}`;
   const current = deck[currentIndex];
 
@@ -420,9 +487,12 @@ function renderCard() {
   document.getElementById('cardDefZh').innerText = current.defZh || '';
 
   const list = document.getElementById('sentenceList');
+  const ex1Hl = highlightTargetWord(current.ex1 || '', current.word);
+  const ex2Hl = highlightTargetWord(current.ex2 || '', current.word);
+  
   list.innerHTML = `
-    <div class="sentence-item"><b>1.</b> ${current.ex1 || ''}</div>
-    <div class="sentence-item"><b>2.</b> ${current.ex2 || ''}</div>
+    <div class="sentence-item"><b>1.</b> ${ex1Hl}</div>
+    <div class="sentence-item"><b>2.</b> ${ex2Hl}</div>
   `;
 
   const secret = document.getElementById('secretArea');
@@ -440,13 +510,29 @@ function revealCard() {
   document.getElementById('evalButtons').style.display = "grid";
 }
 
-function handleCardClick() {
-  if (!isRevealed) {
-    revealCard();
+// 帶有飛出動畫的解答處理
+function triggerAnswer(passed) {
+  if (isAnimating || deck.length === 0) return;
+  isAnimating = true;
+
+  const cardEl = document.getElementById('card');
+  cardEl.style.transition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+
+  if (passed) {
+    cardEl.style.transform = 'translate3d(120%, 0, 0) rotate(20deg)';
+    document.getElementById('badgePass').style.opacity = '1';
+  } else {
+    cardEl.style.transform = 'translate3d(-120%, 0, 0) rotate(-20deg)';
+    document.getElementById('badgeFail').style.opacity = '1';
   }
+  cardEl.style.opacity = '0';
+
+  setTimeout(() => {
+    executeAnswerLogic(passed);
+  }, 180);
 }
 
-function answer(passed) {
+function executeAnswerLogic(passed) {
   const current = deck[currentIndex];
   const mem = getMemoryData();
   let record = mem[current.word] || { stage: 0 };
@@ -468,6 +554,7 @@ function answer(passed) {
     mem[current.word] = record;
     saveMemoryData(mem);
 
+    // 答錯移到隊列後端，繼續循環
     const item = deck.splice(currentIndex, 1)[0];
     deck.push(item);
   }
@@ -478,10 +565,99 @@ function answer(passed) {
   renderCard();
 }
 
+/* ---------------- 手勢滑動邏輯 (Swipe) ---------------- */
+const card = document.getElementById('card');
+let startX = 0, startY = 0, currentX = 0, currentY = 0;
+let isDragging = false;
+
+card.addEventListener('pointerdown', (e) => {
+  if (isAnimating || deck.length === 0) return;
+  if (e.target.closest('button') || e.target.closest('.control-wrapper')) return;
+
+  isDragging = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  currentX = startX;
+  currentY = startY;
+
+  card.style.transition = 'none';
+  card.setPointerCapture(e.pointerId);
+});
+
+card.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  currentX = e.clientX;
+  currentY = e.clientY;
+
+  const deltaX = currentX - startX;
+  const deltaY = currentY - startY;
+  const rotate = deltaX * 0.08;
+
+  card.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) rotate(${rotate}deg)`;
+
+  // 浮現徽章回饋
+  const threshold = 50;
+  if (deltaX > threshold) {
+    const opacity = Math.min((deltaX - threshold) / 80, 1);
+    document.getElementById('badgePass').style.opacity = opacity;
+    document.getElementById('badgeFail').style.opacity = '0';
+  } else if (deltaX < -threshold) {
+    const opacity = Math.min((-deltaX - threshold) / 80, 1);
+    document.getElementById('badgeFail').style.opacity = opacity;
+    document.getElementById('badgePass').style.opacity = '0';
+  } else {
+    document.getElementById('badgePass').style.opacity = '0';
+    document.getElementById('badgeFail').style.opacity = '0';
+  }
+});
+
+card.addEventListener('pointerup', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+
+  const deltaX = currentX - startX;
+  const deltaY = currentY - startY;
+  const swipeThreshold = 90;
+
+  // 1. 往右滑動大於閾值 -> 記住了
+  if (deltaX > swipeThreshold) {
+    triggerAnswer(true);
+    return;
+  }
+  // 2. 往左滑動大於閾值 -> 不熟
+  if (deltaX < -swipeThreshold) {
+    triggerAnswer(false);
+    return;
+  }
+  // 3. 往上滑動或純點擊 -> 顯示釋義
+  if (deltaY < -60 || (Math.abs(deltaX) < 15 && Math.abs(deltaY) < 15)) {
+    revealCard();
+  }
+
+  // 沒達到滑動判定，平滑彈回原位
+  card.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1)';
+  card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+  document.getElementById('badgePass').style.opacity = '0';
+  document.getElementById('badgeFail').style.opacity = '0';
+});
+
+card.addEventListener('pointercancel', () => {
+  isDragging = false;
+  card.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1)';
+  card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+  document.getElementById('badgePass').style.opacity = '0';
+  document.getElementById('badgeFail').style.opacity = '0';
+});
+
 window.addEventListener('keydown', (e) => {
-  if (e.code === "Space" && !isRevealed && document.getElementById('viewPractice').style.display === 'flex') {
+  if (document.getElementById('viewPractice').style.display !== 'flex') return;
+  if (e.code === "Space") {
     e.preventDefault();
     revealCard();
+  } else if (e.code === "ArrowRight") {
+    triggerAnswer(true);
+  } else if (e.code === "ArrowLeft") {
+    triggerAnswer(false);
   }
 });
 </script>
