@@ -47,7 +47,7 @@
     position: relative;
   }
 
-  /* ---------------- 首頁：微色彩按鈕 ---------------- */
+  /* 首頁 */
   #viewHome {
     display: flex;
     flex-direction: column;
@@ -76,7 +76,6 @@
   }
   .level-card:active { transform: scale(0.96); }
 
-  /* 色彩微標識 */
   .lvl-1-2 { border-top: 3px solid #10b981; }
   .lvl-3   { border-top: 3px solid #3b82f6; }
   .lvl-4   { border-top: 3px solid #f59e0b; }
@@ -88,19 +87,10 @@
     background: linear-gradient(135deg, #131522 0%, #101016 100%);
   }
 
-  .lvl-name { 
-    font-size: 1.3rem; 
-    font-weight: 800; 
-    color: #fff; 
-    letter-spacing: -0.3px;
-  }
-  .lvl-tag {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
+  .lvl-name { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+  .lvl-tag { font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; }
 
-  /* ---------------- 刷題頁 ---------------- */
+  /* 刷題頁面 */
   #viewPractice {
     display: none;
     flex-direction: column;
@@ -131,7 +121,6 @@
   .current-mode-tag { font-size: 1rem; font-weight: 700; color: #fff; }
   .queue-tag { font-size: 0.85rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
-  /* 卡片容器 (支援手勢拖曳) */
   .card-container {
     position: relative;
     flex-grow: 1;
@@ -157,7 +146,6 @@
     transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.18s;
   }
 
-  /* 滑動時的覆蓋光暈標識 */
   .swipe-badge {
     position: absolute;
     top: 24px;
@@ -188,6 +176,7 @@
   .word-head { font-size: 2.35rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
   .pos-tag { font-size: 1.1rem; color: var(--accent); font-weight: 700; }
   
+  /* 聲音開關按鈕 */
   .audio-btn {
     background: #22222e;
     border: 1px solid #303042;
@@ -200,7 +189,9 @@
     justify-content: center;
     cursor: pointer;
     font-size: 1.1rem;
+    transition: all 0.2s;
   }
+  .audio-btn.muted { opacity: 0.45; filter: grayscale(1); }
   .audio-btn:active { background: var(--accent); color: #fff; }
 
   .memory-status-wrap { display: flex; justify-content: flex-start; }
@@ -213,7 +204,6 @@
     border: 1px solid #20202c; 
   }
 
-  /* 釋義區域與高亮目標詞 */
   .content-area { margin: 16px 0; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
   .mask { filter: blur(10px); transition: filter 0.22s ease-out; cursor: pointer; }
   .unmasked { filter: none !important; cursor: default; }
@@ -233,12 +223,11 @@
   .sentence-item b { color: #ffffff; margin-right: 4px; }
   .hl-word { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   
-  /* 底部點擊按鈕 (輔助盲按) */
   .control-wrapper { width: 100%; padding-top: 6px; }
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   button.action-btn { 
     border: none; 
-    padding: 15px; 
+    padding: 16px; 
     border-radius: 16px; 
     font-size: 1rem; 
     font-weight: 700; 
@@ -260,7 +249,7 @@
 <body>
 
 <div class="container">
-  <!-- 首頁：微色彩按鈕 -->
+  <!-- 首頁 -->
   <div id="viewHome">
     <div class="grid-levels">
       <div class="level-card lvl-1-2" onclick="openPractice('1-2')">
@@ -315,7 +304,8 @@
               <span class="word-head" id="cardWord">---</span>
               <span class="pos-tag" id="cardPos"></span>
             </div>
-            <button class="audio-btn" id="audioBtn" onclick="speakWord(event)" title="朗讀">🔊</button>
+            <!-- 自動發音開關 -->
+            <button class="audio-btn" id="audioBtn" onclick="toggleAudio(event)" title="切換自動發音">🔊</button>
           </div>
           <div class="memory-status-wrap">
             <span class="memory-status" id="memoryStatus">初次學習</span>
@@ -378,19 +368,45 @@ let currentIndex = 0;
 let isRevealed = false;
 let isAnimating = false;
 
-function shuffle(arr) {
-  return [...arr].sort(() => Math.random() - 0.5);
+// 自動發音狀態 (預設開啟)
+let isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
+
+function updateAudioBtnUI() {
+  const btn = document.getElementById('audioBtn');
+  if (isAutoAudio) {
+    btn.innerText = '🔊';
+    btn.classList.remove('muted');
+  } else {
+    btn.innerText = '🔇';
+    btn.classList.add('muted');
+  }
 }
 
-function speakWord(e) {
+function toggleAudio(e) {
   if (e) e.stopPropagation();
+  isAutoAudio = !isAutoAudio;
+  localStorage.setItem('vocab_auto_audio', isAutoAudio);
+  updateAudioBtnUI();
+  if (isAutoAudio) {
+    speakCurrentWord();
+  }
+}
+
+// 朗讀當前單字
+function speakCurrentWord() {
+  if (!isAutoAudio) return;
   const word = document.getElementById('cardWord').innerText;
-  if (!word || word === "---") return;
+  if (!word || word === "---" || word === "本組完成！") return;
+
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(word);
   utter.lang = 'en-US';
   utter.rate = 0.9;
   window.speechSynthesis.speak(utter);
+}
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
 function getRelativeTimeDescription(lastReviewTimestamp) {
@@ -405,7 +421,6 @@ function getRelativeTimeDescription(lastReviewTimestamp) {
   return `${diffDays} 天前複習`;
 }
 
-// 例句目標詞自動高亮
 function highlightTargetWord(sentence, targetWord) {
   if (!sentence || !targetWord) return sentence;
   const root = targetWord.replace(/(ing|ed|es|s)$/i, '');
@@ -448,6 +463,7 @@ function openPractice(mode) {
 }
 
 function goHome() {
+  window.speechSynthesis.cancel();
   document.getElementById('viewPractice').style.display = 'none';
   document.getElementById('viewHome').style.display = 'flex';
 }
@@ -500,6 +516,9 @@ function renderCard() {
 
   document.getElementById('btnReveal').style.display = "block";
   document.getElementById('evalButtons').style.display = "none";
+
+  // 切換卡片完成後自動念出英文單字
+  speakCurrentWord();
 }
 
 function revealCard() {
@@ -510,7 +529,6 @@ function revealCard() {
   document.getElementById('evalButtons').style.display = "grid";
 }
 
-// 帶有飛出動畫的解答處理
 function triggerAnswer(passed) {
   if (isAnimating || deck.length === 0) return;
   isAnimating = true;
@@ -554,7 +572,6 @@ function executeAnswerLogic(passed) {
     mem[current.word] = record;
     saveMemoryData(mem);
 
-    // 答錯移到隊列後端，繼續循環
     const item = deck.splice(currentIndex, 1)[0];
     deck.push(item);
   }
@@ -565,7 +582,7 @@ function executeAnswerLogic(passed) {
   renderCard();
 }
 
-/* ---------------- 手勢滑動邏輯 (Swipe) ---------------- */
+/* 手勢滑動邏輯 */
 const card = document.getElementById('card');
 let startX = 0, startY = 0, currentX = 0, currentY = 0;
 let isDragging = false;
@@ -595,7 +612,6 @@ card.addEventListener('pointermove', (e) => {
 
   card.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) rotate(${rotate}deg)`;
 
-  // 浮現徽章回饋
   const threshold = 50;
   if (deltaX > threshold) {
     const opacity = Math.min((deltaX - threshold) / 80, 1);
@@ -619,22 +635,18 @@ card.addEventListener('pointerup', (e) => {
   const deltaY = currentY - startY;
   const swipeThreshold = 90;
 
-  // 1. 往右滑動大於閾值 -> 記住了
   if (deltaX > swipeThreshold) {
     triggerAnswer(true);
     return;
   }
-  // 2. 往左滑動大於閾值 -> 不熟
   if (deltaX < -swipeThreshold) {
     triggerAnswer(false);
     return;
   }
-  // 3. 往上滑動或純點擊 -> 顯示釋義
   if (deltaY < -60 || (Math.abs(deltaX) < 15 && Math.abs(deltaY) < 15)) {
     revealCard();
   }
 
-  // 沒達到滑動判定，平滑彈回原位
   card.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1)';
   card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
   document.getElementById('badgePass').style.opacity = '0';
@@ -660,6 +672,11 @@ window.addEventListener('keydown', (e) => {
     triggerAnswer(false);
   }
 });
+
+updateAudioBtnUI();
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
