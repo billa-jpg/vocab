@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>26秒 極速單字記憶</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --bg: #121214;
+    --card: #1e1e24;
+    --card-border: #2e2e38;
+    --accent: #4e8cff;
+    --text-primary: #f0f0f5;
+    --text-secondary: #9090a0;
+    --danger: #ff5c5c;
+    --success: #3ddc84;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
+  .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+  
+  .header { display: flex; justify-content: space-between; align-items: center; }
+  .timer-bar { width: 100%; height: 6px; background: #2a2a35; border-radius: 3px; overflow: hidden; }
+  .timer-fill { height: 100%; width: 100%; background: var(--accent); transition: width 1s linear; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 24px;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .word-head { font-size: 2.2rem; font-weight: 700; color: #fff; display: flex; align-items: baseline; gap: 10px; }
+  .pos-tag { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
+  .timer-text { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
+  
+  .content-area { margin: 18px 0; flex-grow: 1; }
+  .def-box { margin-bottom: 14px; }
+  .def-en { font-size: 1rem; color: #e2e2ec; margin-bottom: 6px; line-height: 1.4; }
+  .def-zh { font-size: 0.95rem; color: var(--accent); font-weight: 500; }
+  
+  .sentence-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; border-top: 1px solid #2e2e38; padding-top: 14px; }
+  .sentence-item { font-size: 0.95rem; line-height: 1.45; color: #b5b5c5; }
+  .sentence-item b { color: #fff; }
+  
+  .mask { filter: blur(7px); user-select: none; transition: filter 0.2s ease-out; cursor: pointer; }
+  .unmasked { filter: none !important; cursor: default; }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  button { border: none; padding: 15px; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+  button:active { transform: scale(0.98); opacity: 0.85; }
+  .btn-reveal { width: 100%; background: #2f2f3c; color: #fff; border: 1px solid #3f3f50; }
+  .btn-fail { background: rgba(255, 92, 92, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+  .btn-pass { background: rgba(61, 220, 132, 0.15); color: var(--success); border: 1px solid var(--success); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <span style="font-weight: 700; letter-spacing: 0.5px;">26s 速記模式</span>
+    <span id="queueCount" style="color: var(--text-secondary); font-size: 0.9rem;">剩餘: 0</span>
+  </div>
+  
+  <div class="timer-bar">
+    <div class="timer-fill" id="timerFill"></div>
+  </div>
+
+  <div class="card" id="card" onclick="handleCardClick()">
+    <div>
+      <div class="word-head">
+        <span id="cardWord">---</span>
+        <span class="pos-tag" id="cardPos"></span>
+      </div>
+      <div class="timer-text" id="timerText">倒數 26 秒</div>
+    </div>
+
+    <div class="content-area">
+      <div id="secretArea" class="mask">
+        <div class="def-box">
+          <div class="def-en" id="cardDefEn">---</div>
+          <div class="def-zh" id="cardDefZh">---</div>
+        </div>
+        <div class="sentence-list" id="sentenceList"></div>
+      </div>
+    </div>
+
+    <div id="controlArea" onclick="event.stopPropagation()">
+      <button class="btn-reveal" id="btnReveal" onclick="revealCard()">顯示釋義</button>
+      <div class="actions" id="evalButtons" style="display: none;">
+        <button class="btn-fail" onclick="answer(false)">不熟 (重新循環)</button>
+        <button class="btn-pass" onclick="answer(true)">記住了 (下一題)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_WORDS = [
+  {
+    word: "accept",
+    pos: "v.",
+    defEn: "To agree to receive or do something.",
+    defZh: "接受；答應 (Level 1)",
+    ex1: "He accepted the gift with a smile.",
+    ex2: "The board unanimously accepted the proposal after a thorough evaluation of the financial risks."
+  },
+  {
+    word: "damage",
+    pos: "n.",
+    defEn: "Physical harm caused to something which makes it less attractive, useful, or valuable.",
+    defZh: "損害；傷害 (Level 2)",
+    ex1: "The storm caused serious damage to the roof.",
+    ex2: "Prolonged exposure to ultraviolet radiation can cause irreversible cellular damage to human skin."
+  },
+  {
+    word: "constant",
+    pos: "adj.",
+    defEn: "Happening all the time or repeatedly; remaining unchanging.",
+    defZh: "持續不斷的；恆定的 (Level 3)",
+    ex1: "He was tired of the constant noise.",
+    ex2: "Maintaining a constant velocity requires balancing the applied driving force against opposing frictional drag."
+  },
+  {
+    word: "efficient",
+    pos: "adj.",
+    defEn: "Working in a well-organized and competent way without wasting time, energy, or resources.",
+    defZh: "有效率的 (Level 4)",
+    ex1: "This new machine is very efficient.",
+    ex2: "Developing efficient numerical algorithms allows scientists to solve complex differential equations within seconds."
+  },
+  {
+    word: "substitute",
+    pos: "v.",
+    defEn: "To use something or someone instead of another.",
+    defZh: "替代；取代 (Level 5)",
+    ex1: "You can substitute honey for sugar in this recipe.",
+    ex2: "The engineer substituted lightweight composite materials for steel to enhance the vehicle's structural agility."
+  },
+  {
+    word: "accumulate",
+    pos: "v.",
+    defEn: "To gradually gather or build up an increasing number or quantity of something over time.",
+    defZh: "積累；堆積 (Level 6)",
+    ex1: "Dust accumulates quickly in this room.",
+    ex2: "Over the course of the simulation, tiny computational rounding errors accumulated and distorted the final trajectory."
+  }
+];
+
+let deck = [...DEFAULT_WORDS];
+let currentIndex = 0;
+let timeLeft = 26;
+let timerId = null;
+let isRevealed = false;
+
+function startTimer() {
+  clearInterval(timerId);
+  timeLeft = 26;
+  updateTimerUI();
+  
+  timerId = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      revealCard();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  document.getElementById('timerText').innerText = `倒數 ${timeLeft} 秒`;
+  const pct = (timeLeft / 26) * 100;
+  document.getElementById('timerFill').style.width = `${pct}%`;
+}
+
+function renderCard() {
+  if (deck.length === 0) {
+    document.getElementById('cardWord').innerText = "全部完成！";
+    document.getElementById('cardPos').innerText = "";
+    document.getElementById('timerText').innerText = "";
+    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>太棒了！所有單字都已完成記憶提取。</p>";
+    document.getElementById('secretArea').className = "unmasked";
+    document.getElementById('controlArea').style.display = "none";
+    clearInterval(timerId);
+    return;
+  }
+
+  isRevealed = false;
+  document.getElementById('queueCount').innerText = `剩餘: ${deck.length}`;
+  const current = deck[currentIndex];
+
+  document.getElementById('cardWord').innerText = current.word;
+  document.getElementById('cardPos').innerText = current.pos || '';
+  document.getElementById('cardDefEn').innerText = current.defEn || '';
+  document.getElementById('cardDefZh').innerText = current.defZh || '';
+
+  const list = document.getElementById('sentenceList');
+  list.innerHTML = `
+    <div class="sentence-item"><b>1.</b> ${current.ex1 || ''}</div>
+    <div class="sentence-item"><b>2.</b> ${current.ex2 || ''}</div>
+  `;
+
+  const secret = document.getElementById('secretArea');
+  secret.className = "mask";
+
+  document.getElementById('btnReveal').style.display = "block";
+  document.getElementById('evalButtons').style.display = "none";
+
+  startTimer();
+}
+
+function revealCard() {
+  if (isRevealed) return;
+  isRevealed = true;
+  clearInterval(timerId);
+  document.getElementById('secretArea').className = "unmasked";
+  document.getElementById('btnReveal').style.display = "none";
+  document.getElementById('evalButtons').style.display = "grid";
+}
+
+function handleCardClick() {
+  if (!isRevealed) {
+    revealCard();
+  }
+}
+
+function answer(passed) {
+  if (passed) {
+    deck.splice(currentIndex, 1);
+  } else {
+    const item = deck.splice(currentIndex, 1)[0];
+    deck.push(item);
+  }
+  
+  if (deck.length > 0) {
+    currentIndex = currentIndex % deck.length;
+  }
+  renderCard();
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === "Space" && !isRevealed) {
+    e.preventDefault();
+    revealCard();
+  }
+});
+
+renderCard();
+</script>
+</body>
+</html>
