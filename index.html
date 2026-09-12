@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>26秒 極速單字記憶</title>
+<title>極速單字記憶</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -13,7 +13,6 @@
     --card-border: #262633;
     --card-active: #22222d;
     --accent: #3b82f6;
-    --accent-glow: rgba(59, 130, 246, 0.2);
     --text-primary: #f3f3f6;
     --text-secondary: #8e8e9c;
     --danger: #ef4444;
@@ -42,31 +41,19 @@
   .container { 
     width: 100%; 
     max-width: 440px; 
-    min-height: 90vh;
+    min-height: 85vh;
     display: flex; 
     flex-direction: column; 
     justify-content: center;
   }
 
-  /* 首頁等級選擇 */
+  /* 首頁：純按鈕選單 */
   #viewHome {
     display: flex;
     flex-direction: column;
-    gap: 20px;
     width: 100%;
-    animation: fadeIn 0.25s ease-out;
+    animation: fadeIn 0.2s ease-out;
   }
-  .home-title {
-    font-size: 1.8rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-  .home-subtitle {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
-
   .grid-levels {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -75,12 +62,11 @@
   .level-card {
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 20px 16px;
+    border-radius: 18px;
+    padding: 24px 16px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 125px;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: transform 0.15s, background 0.2s;
   }
@@ -90,36 +76,29 @@
   }
   .level-card.special {
     grid-column: span 2;
-    background: linear-gradient(135deg, #1b2033 0%, #151620 100%);
-    border-color: #3b4260;
-    min-height: 95px;
+    background: linear-gradient(135deg, #1a1f30 0%, #151620 100%);
+    border-color: #353c52;
   }
-  .lvl-name { font-size: 1.25rem; font-weight: 800; color: #fff; }
-  .lvl-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
-  .lvl-badge {
-    align-self: flex-start;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--accent);
-    background: rgba(59, 130, 246, 0.12);
-    padding: 4px 10px;
-    border-radius: 12px;
-    margin-top: 10px;
-  }
-  .level-card.special .lvl-badge {
-    color: #a78bfa;
-    background: rgba(167, 139, 250, 0.14);
+  .lvl-name { 
+    font-size: 1.25rem; 
+    font-weight: 700; 
+    color: #fff; 
+    text-align: center;
   }
 
   /* 刷題頁面 */
   #viewPractice {
     display: none;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     width: 100%;
-    animation: slideUp 0.25s ease-out;
+    animation: slideUp 0.2s ease-out;
   }
-  .nav-bar { display: flex; justify-content: space-between; align-items: center; }
+  .nav-bar { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+  }
   .btn-back {
     background: #1e1e28;
     border: 1px solid #303040;
@@ -131,22 +110,8 @@
     cursor: pointer;
   }
   .btn-back:active { transform: scale(0.96); }
-  .current-mode-tag { font-size: 0.95rem; font-weight: 700; color: #fff; }
+  .current-mode-tag { font-size: 1rem; font-weight: 700; color: #fff; }
   .queue-tag { font-size: 0.85rem; color: var(--text-secondary); }
-
-  .timer-bar { 
-    width: 100%; 
-    height: 5px; 
-    background: #20202c; 
-    border-radius: 3px; 
-    overflow: hidden; 
-  }
-  .timer-fill { 
-    height: 100%; 
-    width: 100%; 
-    background: var(--accent); 
-    transition: width 1s linear; 
-  }
 
   .card {
     background: var(--card);
@@ -181,8 +146,7 @@
   }
   .audio-btn:active { background: var(--accent); color: #fff; }
 
-  .meta-row { display: flex; justify-content: space-between; align-items: center; }
-  .timer-text { font-size: 0.82rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .memory-status-wrap { display: flex; justify-content: flex-start; }
   .memory-status { 
     font-size: 0.78rem; 
     color: #9da3af; 
@@ -192,7 +156,7 @@
     border: 1px solid #232330; 
   }
 
-  .content-area { margin: 18px 0; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+  .content-area { margin: 20px 0; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
   .mask { filter: blur(9px); transition: filter 0.25s ease-out; cursor: pointer; }
   .unmasked { filter: none !important; cursor: default; }
 
@@ -230,80 +194,47 @@
   .btn-pass { background: var(--success-bg); color: var(--success); border: 1.5px solid var(--success); }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- 首頁 -->
+  <!-- 首頁：純六個按鈕 -->
   <div id="viewHome">
-    <div>
-      <div class="home-title">26秒 極速記憶 ⚡</div>
-      <div class="home-subtitle">選擇單字難度，進入間隔複習訓練</div>
-    </div>
-
     <div class="grid-levels">
       <div class="level-card" onclick="openPractice('1-2')">
-        <div>
-          <div class="lvl-name">Lv 1-2</div>
-          <div class="lvl-desc">基礎核心必備詞</div>
-        </div>
-        <div class="lvl-badge" id="badge-1-2">待練: 0</div>
+        <div class="lvl-name">Lv 1-2</div>
       </div>
 
       <div class="level-card" onclick="openPractice('3')">
-        <div>
-          <div class="lvl-name">Lv 3</div>
-          <div class="lvl-desc">中級進階銜接詞</div>
-        </div>
-        <div class="lvl-badge" id="badge-3">待練: 0</div>
+        <div class="lvl-name">Lv 3</div>
       </div>
 
       <div class="level-card" onclick="openPractice('4')">
-        <div>
-          <div class="lvl-name">Lv 4</div>
-          <div class="lvl-desc">學測均標關鍵詞</div>
-        </div>
-        <div class="lvl-badge" id="badge-4">待練: 0</div>
+        <div class="lvl-name">Lv 4</div>
       </div>
 
       <div class="level-card" onclick="openPractice('5')">
-        <div>
-          <div class="lvl-name">Lv 5</div>
-          <div class="lvl-desc">高分前標挑戰詞</div>
-        </div>
-        <div class="lvl-badge" id="badge-5">待練: 0</div>
+        <div class="lvl-name">Lv 5</div>
       </div>
 
       <div class="level-card" onclick="openPractice('6')">
-        <div>
-          <div class="lvl-name">Lv 6</div>
-          <div class="lvl-desc">頂標決勝延伸詞</div>
-        </div>
-        <div class="lvl-badge" id="badge-6">待練: 0</div>
+        <div class="lvl-name">Lv 6</div>
       </div>
 
       <div class="level-card special" onclick="openPractice('all')">
-        <div>
-          <div class="lvl-name">綜合隨機 (Lv 1~6)</div>
-          <div class="lvl-desc">打亂所有已到期單字，進行高強度實戰抽測</div>
-        </div>
-        <div class="lvl-badge" id="badge-all">待練: 0</div>
+        <div class="lvl-name">綜合隨機</div>
       </div>
     </div>
   </div>
 
-  <!-- 刷題頁 -->
+  <!-- 刷題頁面 -->
   <div id="viewPractice">
     <div class="nav-bar">
-      <button class="btn-back" onclick="goHome()">← 返回主頁</button>
+      <button class="btn-back" onclick="goHome()">← 返回</button>
       <span class="current-mode-tag" id="currentModeLabel">Lv 1-2</span>
       <span class="queue-tag" id="queueCount">剩餘: 0</span>
-    </div>
-
-    <div class="timer-bar">
-      <div class="timer-fill" id="timerFill"></div>
     </div>
 
     <div class="card" id="card" onclick="handleCardClick()">
@@ -315,8 +246,7 @@
           </div>
           <button class="audio-btn" id="audioBtn" onclick="speakWord(event)" title="朗讀單字">🔊</button>
         </div>
-        <div class="meta-row">
-          <span class="timer-text" id="timerText">倒數 26 秒</span>
+        <div class="memory-status-wrap">
           <span class="memory-status" id="memoryStatus">初次學習</span>
         </div>
       </div>
@@ -342,7 +272,6 @@
   </div>
 </div>
 
-<!-- 分級載入獨立單字庫檔案 -->
 <script src="level1_2.js"></script>
 <script src="level3.js"></script>
 <script src="level4.js"></script>
@@ -350,7 +279,6 @@
 <script src="level6.js"></script>
 
 <script>
-// 自動將分開的檔案整合成一個總資料庫
 function getFullDatabase() {
   return {
     "1-2": (typeof WORDS_LEVEL_1_2 !== 'undefined') ? WORDS_LEVEL_1_2 : [],
@@ -374,8 +302,6 @@ function saveMemoryData(data) {
 let currentMode = "1-2";
 let deck = [];
 let currentIndex = 0;
-let timeLeft = 26;
-let timerId = null;
 let isRevealed = false;
 
 function shuffle(arr) {
@@ -426,25 +352,14 @@ function getDueWordsForLevel(lvl) {
   });
 }
 
-function updateHomeBadges() {
-  const levels = ['1-2', '3', '4', '5', '6', 'all'];
-  levels.forEach(lvl => {
-    const due = getDueWordsForLevel(lvl);
-    const badge = document.getElementById(`badge-${lvl}`);
-    if (badge) {
-      badge.innerText = `待練: ${due.length}`;
-    }
-  });
-}
-
 function openPractice(mode) {
   currentMode = mode;
   const titles = {
-    "1-2": "Lv 1-2 練習",
-    "3": "Lv 3 練習",
-    "4": "Lv 4 練習",
-    "5": "Lv 5 練習",
-    "6": "Lv 6 練習",
+    "1-2": "Lv 1-2",
+    "3": "Lv 3",
+    "4": "Lv 4",
+    "5": "Lv 5",
+    "6": "Lv 6",
     "all": "綜合隨機"
   };
   document.getElementById('currentModeLabel').innerText = titles[mode];
@@ -474,44 +389,19 @@ function openPractice(mode) {
 }
 
 function goHome() {
-  clearInterval(timerId);
   document.getElementById('viewPractice').style.display = 'none';
   document.getElementById('viewHome').style.display = 'flex';
-  updateHomeBadges();
-}
-
-function startTimer() {
-  clearInterval(timerId);
-  timeLeft = 26;
-  updateTimerUI();
-  
-  timerId = setInterval(() => {
-    timeLeft--;
-    updateTimerUI();
-    if (timeLeft <= 0) {
-      clearInterval(timerId);
-      revealCard();
-    }
-  }, 1000);
-}
-
-function updateTimerUI() {
-  document.getElementById('timerText').innerText = `倒數 ${timeLeft} 秒`;
-  const pct = (timeLeft / 26) * 100;
-  document.getElementById('timerFill').style.width = `${pct}%`;
 }
 
 function renderCard() {
   if (deck.length === 0) {
     document.getElementById('cardWord').innerText = "本組完成！";
     document.getElementById('cardPos').innerText = "";
-    document.getElementById('timerText').innerText = "";
     document.getElementById('memoryStatus').innerText = "進度達成";
-    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>太棒了！今天該複習的單字皆已掌握完畢。</p>";
+    document.getElementById('secretArea').innerHTML = "<p style='margin-top:20px; color:#aaa; line-height:1.5;'>所有單字皆已掌握完畢。</p>";
     document.getElementById('secretArea').className = "unmasked";
     document.getElementById('btnReveal').style.display = "none";
     document.getElementById('evalButtons').style.display = "none";
-    clearInterval(timerId);
     return;
   }
 
@@ -540,14 +430,11 @@ function renderCard() {
 
   document.getElementById('btnReveal').style.display = "block";
   document.getElementById('evalButtons').style.display = "none";
-
-  startTimer();
 }
 
 function revealCard() {
   if (isRevealed) return;
   isRevealed = true;
-  clearInterval(timerId);
   document.getElementById('secretArea').className = "unmasked";
   document.getElementById('btnReveal').style.display = "none";
   document.getElementById('evalButtons').style.display = "grid";
@@ -596,10 +483,6 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     revealCard();
   }
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-  updateHomeBadges();
 });
 </script>
 </body>
